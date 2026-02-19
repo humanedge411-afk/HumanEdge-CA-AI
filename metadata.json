@@ -1,0 +1,9 @@
+{
+  "name": "HumanEdge(CA) AI",
+  "description": "A 100% integrity-based, high-performance AI ecosystem for creative generation, code repair, and humanity-driven computing.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
