@@ -43,6 +43,7 @@ import AdminPanel from './components/AdminPanel';
 import UserPortal from './components/UserPortal';
 import AdminLogin from './components/AdminLogin';
 import AppBuilder from './components/AppBuilder';
+import ChatAssistant from './components/ChatAssistant';
 
 const INITIAL_ASSETS: ProjectAsset[] = [
   { id: '1', name: 'Cyberpunk Cityscape 4K', type: 'Photo', module: AppView.CREATIVE_STUDIO, timestamp: Date.now() - 3600000, tags: ['cyber', 'neon', '4k'] },
@@ -434,6 +435,9 @@ const App: React.FC = () => {
           {activeView === AppView.ADMIN && <AdminPanel onNavigateToDashboard={() => setActiveView(AppView.DASHBOARD)} onLockdown={handleSystemLockdown} notify={notify} />}
           {activeView === AppView.DASHBOARD && <Dashboard assets={assets} />}
         </div>
+        
+        {/* Chat Assistant */}
+        {!isSystemLocked && <ChatAssistant />}
       </main>
     </div>
   );

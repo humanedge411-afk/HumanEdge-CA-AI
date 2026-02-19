@@ -17,12 +17,25 @@ const DEFAULT_VIBE_PROMPTS: Record<VibeMode, string> = {
   cyberpunk: "Apply a high-tech, low-life aesthetic. Dark themes with neon accents, glitch effects, and complex, layered interfaces. Use pink, blue, and purple neon glow.",
   minimalist: "Apply a Zen-like minimalist aesthetic. Maximum whitespace, thin lines, subtle shadows, and high-readability typography. Use soft grays and crisp whites.",
   organic: "Apply an organic, fluid aesthetic. Rounded corners, soft gradients, natural color palettes (emerald, sage), and smooth transitions.",
-  'retro-future': "Apply a retro-futuristic aesthetic. 80s synthwave colors (indigo, magenta), scanlines, bold geometric shapes, and analog-digital hybrid design.",
+  'retro-future': "Apply a retro-futuristic aesthetic. 80s synthwave colors (indigo, magenta), scanlines, bold government shapes, and analog-digital hybrid design.",
   standard: "Maintain professional, clean, and modern standards with a blue/slate palette."
 };
 
 const getVibePrompt = (vibe: VibeMode, customOverride?: string) => {
   return customOverride || DEFAULT_VIBE_PROMPTS[vibe] || DEFAULT_VIBE_PROMPTS.standard;
+};
+
+export const createChatSession = (vibe: VibeMode = 'standard') => {
+  const ai = getAI();
+  return ai.chats.create({
+    model: 'gemini-3-flash-preview',
+    config: {
+      systemInstruction: `${SYSTEM_INSTRUCTION}\nYou are the HumanEdge Support Core. Your mission is to assist users in navigating the platform and brainstorming revolutionary, high-integrity web products. 
+      - If they want to build an app, help them refine their vision into a single high-quality prompt.
+      - Be concise, professional, and helpful.
+      - Maintain the HumanEdge tone: efficient, humanity-driven, and technical.`,
+    },
+  });
 };
 
 export const updateVibeAesthetic = async (currentVibe: VibeMode, currentDescription: string, instruction: string) => {
@@ -93,8 +106,6 @@ export const generateVideo = async (
 ) => {
   const ai = getAI();
   const finalPrompt = `${prompt}. Visual Style: ${getVibePrompt(vibe, vibeOverride)}`;
-  
-  // Use generate-preview for high-quality and extension support
   const modelToUse = 'veo-3.1-generate-preview';
   
   onProgress?.(`Forging Initial Shard (5-7s)...`);
@@ -116,9 +127,8 @@ export const generateVideo = async (
   }
 
   let currentVideo = operation.response?.generatedVideos?.[0]?.video;
-  let currentDuration = 5; // Start with the first 5s chunk
+  let currentDuration = 5;
 
-  // Temporal Expansion Loop: Extend the video until the target duration is reached
   if (targetDurationSeconds > 5 && currentVideo) {
     const iterationsNeeded = Math.ceil((targetDurationSeconds - 5) / 7);
     let currentIteration = 1;
@@ -143,7 +153,7 @@ export const generateVideo = async (
       }
 
       currentVideo = extensionOp.response?.generatedVideos?.[0]?.video;
-      currentDuration += 7; // Veo extensions add 7 seconds
+      currentDuration += 7;
       currentIteration++;
     }
   }
