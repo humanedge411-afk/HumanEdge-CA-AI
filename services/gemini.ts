@@ -53,7 +53,7 @@ export const updateVibeAesthetic = async (currentVibe: VibeMode, currentDescript
 export const generateText = async (prompt: string, vibe: VibeMode = 'standard', vibeOverride?: string) => {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       systemInstruction: `${SYSTEM_INSTRUCTION}\n\VIBE_CONTEXT: ${getVibePrompt(vibe, vibeOverride)}`,
@@ -106,7 +106,7 @@ export const generateVideo = async (
 ) => {
   const ai = getAI();
   const finalPrompt = `${prompt}. Visual Style: ${getVibePrompt(vibe, vibeOverride)}`;
-  const modelToUse = 'veo-3.1-generate-preview';
+  const modelToUse = 'veo-3.1-fast-generate-preview';
   
   onProgress?.(`Forging Initial Shard (5-7s)...`);
 
@@ -186,18 +186,26 @@ export const generateAudio = async (text: string, vibe: VibeMode = 'standard', v
   return `data:audio/wav;base64,${base64Audio}`; 
 };
 
-export const generateCodeSolution = async (problem: string, vibe: VibeMode = 'standard', vibeOverride?: string) => {
+export const generateCodeSolution = async (problem: string, vibe: VibeMode = 'standard', vibeOverride?: string, useTurbo: boolean = false) => {
   const ai = getAI();
   const vibeInstruction = getVibePrompt(vibe, vibeOverride);
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: useTurbo ? 'gemini-3-flash-preview' : 'gemini-3-pro-preview',
     contents: `Task: Build a fully functional, high-fidelity web product for: ${problem}.
+    
+    CRITICAL REQUIREMENT: The product MUST include a functional Account Settings / User Profile section. 
+    This section should allow users to:
+    1. Edit profile details (Name, Bio, Email).
+    2. Toggle between Visual Themes (Vibe Sync).
+    3. View a "System Integrity" status.
+    Implement these using local state (JavaScript) and high-quality UI components.
+
     Vibe Context: ${vibeInstruction}.
     Output Format: Provide a single, self-contained HTML file using Tailwind CSS via CDN and vanilla JavaScript. 
     It must be ready to render in an iframe. No markdown blocks, just the HTML content.`,
     config: {
-      systemInstruction: "You are the HumanEdge Materializer. Output high-integrity, production-ready code as a single manifest. No yapping, just the HTML.",
+      systemInstruction: "You are the HumanEdge Materializer. Output high-integrity, production-ready code as a single manifest. Ensure built-in account settings management is included. No yapping, just the HTML.",
     },
   });
   return response.text;
@@ -206,7 +214,7 @@ export const generateCodeSolution = async (problem: string, vibe: VibeMode = 'st
 export const searchRealTimeDataset = async (query: string) => {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: query,
     config: {
       tools: [{ googleSearch: {} }],
@@ -238,7 +246,7 @@ export const generateGeospatialData = async (query: string) => {
 export const refineCode = async (existingCode: string, tweak: string) => {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: `Refine the following code based on the instructions: ${tweak}\n\nExisting Code:\n${existingCode}`,
     config: {
       systemInstruction: "You are the HumanEdge Integrity Engineer. Refine the provided code with high precision.",
@@ -254,7 +262,7 @@ export const generateGameConcept = async (genre: string, previousConcept?: any, 
     : `Generate world-class ${genre} game architecture.`;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
       systemInstruction: "You are the HumanEdge World Architect. Output JSON with fields: title, story, visualStyle, mechanics.",
@@ -277,7 +285,7 @@ export const generateGameConcept = async (genre: string, previousConcept?: any, 
 export const detectFraud = async (data: string) => {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     contents: `Audit stream: ${data}`,
     config: {
       systemInstruction: "Strict Integrity Sentinel mode. Block all deceptive signals.",

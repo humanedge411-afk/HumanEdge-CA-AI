@@ -28,7 +28,12 @@ import {
   X,
   Eye,
   Maximize2,
-  ExternalLink
+  ExternalLink,
+  Settings,
+  Share2,
+  Tornado,
+  FastForward,
+  PlayCircle
 } from 'lucide-react';
 import { generateCodeSolution } from '../services/gemini';
 import { VibeMode, AppView } from '../types';
@@ -37,13 +42,6 @@ interface AppBuilderProps {
   onAssetSecured: (asset: any) => void;
   notify: (msg: string, type?: any) => void;
 }
-
-const INTEGRATIONS = [
-  { id: 'stripe', name: 'Stripe Payments', icon: CreditCard, color: 'text-indigo-500' },
-  { id: 'auth', name: 'Integrity Auth', icon: Fingerprint, color: 'text-emerald-500' },
-  { id: 's3', name: 'Cloud Storage', icon: HardDrive, color: 'text-blue-500' },
-  { id: 'email', name: 'Email Flow', icon: Mail, color: 'text-orange-500' },
-];
 
 const VIBES: { id: VibeMode, name: string, icon: any, color: string, desc: string }[] = [
   { id: 'cyberpunk', name: 'Neon Cyber', icon: Moon, color: 'text-pink-500', desc: 'Neon, Glitch, High-Contrast' },
@@ -60,20 +58,35 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
   const [selectedVibe, setSelectedVibe] = useState<VibeMode>('standard');
   const [output, setOutput] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
+  const [productionUrl, setProductionUrl] = useState<string | null>(null);
+  const [useTurbo, setUseTurbo] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Tagging State
   const [tagInput, setTagInput] = useState('');
   const [appTags, setAppTags] = useState<string[]>([]);
 
+  const cleanCode = (raw: string) => {
+    return raw
+      .replace(/```html/gi, '')
+      .replace(/```/g, '')
+      .trim();
+  };
+
   const handleBuild = async () => {
     if (!prompt) return;
     setIsBuilding(true);
     setOutput(null);
+    setProductionUrl(null);
     
-    const steps = [
+    const steps = useTurbo ? [
+      "Turbo Shards Igniting...",
+      "Injecting Aesthetic DNA...",
+      "Materializing Reality..."
+    ] : [
       "Analyzing Intent Shards...",
       `Injecting ${selectedVibe.toUpperCase()} Aesthetic DNA...`,
+      "Integrating Account & Settings Modules...",
       "Synchronizing Integrity Protocols...",
       "Generating Product Manifest...",
       "Polishing Adaptive Interface...",
@@ -82,18 +95,22 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
 
     for (const step of steps) {
       setBuildStep(step);
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, useTurbo ? 400 : 800));
     }
 
     try {
       const manifest = await generateCodeSolution(
-        `Build a complete standalone web product for: ${prompt}. It must have a fully developed UI, working logic, and follow the requested aesthetic vibe.`,
-        selectedVibe
+        `Build a complete standalone web product for: ${prompt}. 
+        MUST include a sophisticated User Account Settings dashboard. 
+        MUST use the ${selectedVibe} design language.`,
+        selectedVibe,
+        undefined,
+        useTurbo
       );
-      // Clean up the output in case the model adds markdown code blocks
-      const cleaned = manifest.replace(/```html/g, '').replace(/```/g, '').trim();
+      
+      const cleaned = cleanCode(manifest);
       setOutput(cleaned);
-      notify("Product Materialized and Verified.");
+      notify(useTurbo ? "Turbo Materialization Complete." : "Product Materialized with Account Core.");
     } catch (err) {
       console.error(err);
       notify("Synthesis failure. Integrity check suggested.", "error");
@@ -103,16 +120,22 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
   };
 
   const handleDeploy = async () => {
+    if (!output) return;
     setIsDeploying(true);
     notify("Publishing Product to Global Edge...");
-    await new Promise(r => setTimeout(r, 2500));
+    await new Promise(r => setTimeout(r, 1200));
+    
+    const blob = new Blob([output], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    setProductionUrl(url);
+    
     setIsDeploying(false);
     
     onAssetSecured({ 
       name: prompt.substring(0, 30) + '...', 
       type: 'FullApp', 
       module: AppView.APP_BUILDER,
-      tags: appTags.length > 0 ? appTags : [selectedVibe, 'materialized']
+      tags: appTags.length > 0 ? appTags : [selectedVibe, 'materialized', useTurbo ? 'turbo' : 'high-fidelity']
     });
     
     notify("Materialization Permanent. Production link live.");
@@ -126,6 +149,12 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
     if (tag && !appTags.includes(tag)) {
       setAppTags([...appTags, tag]);
       setTagInput('');
+    }
+  };
+
+  const openLive = () => {
+    if (productionUrl) {
+      window.open(productionUrl, '_blank');
     }
   };
 
@@ -153,19 +182,27 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
         {/* Left Column: Architect */}
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6">
           <div className="glass p-8 rounded-[2.5rem] border border-blue-200 bg-white flex flex-col gap-8 h-full shadow-xl">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg">
-                <Rocket className="w-6 h-6" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg">
+                  <Rocket className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-slate-900 font-black uppercase tracking-tight text-sm">App Architect</h4>
+                </div>
               </div>
-              <div>
-                <h4 className="text-slate-900 font-black uppercase tracking-tight text-sm">Product Materializer</h4>
-                <p className="text-[9px] text-blue-600 font-black uppercase tracking-widest">End-Product Engine</p>
-              </div>
+              <button 
+                onClick={() => setUseTurbo(!useTurbo)}
+                className={`p-2.5 rounded-xl transition-all border ${useTurbo ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}
+                title={useTurbo ? "Turbo Mode Active (Fast)" : "High-Fidelity Mode Active (Slower)"}
+              >
+                {useTurbo ? <Tornado className="w-5 h-5 animate-pulse" /> : <Layers className="w-5 h-5" />}
+              </button>
             </div>
 
             <div className="space-y-4">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Palette className="w-3 h-3 text-blue-500" /> Vibe Aesthetic Core
+                <Palette className="w-3 h-3 text-blue-500" /> Aesthetic DNA
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {VIBES.map(v => (
@@ -191,22 +228,27 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
             </div>
 
             <div className="space-y-4 flex-1 flex flex-col">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Product Vision</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex justify-between">
+                <span>Product Vision</span>
+                <span className={`text-[8px] font-black ${useTurbo ? 'text-orange-500' : 'text-blue-500'}`}>
+                  {useTurbo ? '⚡ TURBO ACTIVE' : '✨ HI-FI ACTIVE'}
+                </span>
+              </label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g. A sleek SaaS landing page for an AI-powered logistics platform..."
-                className="w-full flex-1 min-h-[160px] bg-slate-50 border border-slate-200 rounded-3xl p-6 text-sm text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 font-semibold leading-relaxed placeholder:text-slate-300"
+                placeholder="Describe your vision (e.g. A marketplace for orbital real estate)..."
+                className="w-full flex-1 min-h-[140px] bg-slate-50 border border-slate-200 rounded-3xl p-6 text-sm text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 font-semibold leading-relaxed placeholder:text-slate-300"
               />
             </div>
 
             <button
               onClick={handleBuild}
               disabled={isBuilding || !prompt}
-              className="w-full py-5 bg-blue-600 text-white font-black rounded-[1.5rem] uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-2xl shadow-blue-600/20 disabled:opacity-50 active:scale-95"
+              className={`w-full py-5 text-white font-black rounded-[1.5rem] uppercase tracking-[0.3em] text-[11px] flex items-center justify-center gap-3 transition-all shadow-2xl disabled:opacity-50 active:scale-95 ${useTurbo ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'}`}
             >
-              {isBuilding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-              {isBuilding ? 'Synthesizing...' : 'Materialize Product'}
+              {isBuilding ? <Loader2 className="w-5 h-5 animate-spin" /> : useTurbo ? <FastForward className="w-5 h-5" /> : <PlayCircle className="w-5 h-5" />}
+              {isBuilding ? 'Synthesizing...' : useTurbo ? 'Turbo Build' : 'Launch Materialization'}
             </button>
           </div>
         </div>
@@ -234,9 +276,11 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
                 ))}
               </div>
               {output && (
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Aesthetic Alignment Stable</span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Account Shards Active</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -245,18 +289,18 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
               {!output && !isBuilding ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12">
                   <div className="w-32 h-32 bg-blue-50 rounded-[3rem] flex items-center justify-center mb-8 shadow-inner animate-in zoom-in-50 duration-700">
-                    <CloudLightning className="w-16 h-16 text-blue-200" />
+                    {useTurbo ? <Tornado className="w-16 h-16 text-orange-200" /> : <CloudLightning className="w-16 h-16 text-blue-200" />}
                   </div>
                   <h4 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Materialization Portal</h4>
-                  <p className="text-slate-400 font-medium max-w-sm mt-3">
-                    Your intent blueprint will materialize here as a fully functional interactive product.
+                  <p className="text-slate-400 font-medium max-w-sm mt-3 uppercase text-[10px] tracking-widest">
+                    Standing by for aesthetic intent shards.
                   </p>
                 </div>
               ) : isBuilding ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-xl z-20 animate-in fade-in duration-300">
                   <div className="relative mb-6">
-                    <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-                    <div className="absolute inset-0 m-auto w-6 h-6 bg-blue-600 rounded-full animate-ping"></div>
+                    <Loader2 className={`w-16 h-16 ${useTurbo ? 'text-orange-600' : 'text-blue-600'} animate-spin`} />
+                    <div className={`absolute inset-0 m-auto w-6 h-6 ${useTurbo ? 'bg-orange-600' : 'bg-blue-600'} rounded-full animate-ping`}></div>
                   </div>
                   <p className="text-slate-900 font-black uppercase tracking-[0.4em] text-[11px] text-center">{buildStep}</p>
                 </div>
@@ -277,7 +321,7 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
               )}
             </div>
 
-            {/* Bottom Actions & Metadata */}
+            {/* Bottom Actions */}
             {output && (
               <div className="p-8 bg-white border-t border-slate-100 flex flex-col md:flex-row items-center gap-8 animate-in slide-in-from-bottom-6 duration-500">
                 <div className="flex-1 space-y-4 w-full">
@@ -301,7 +345,7 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
                       <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         type="text" 
-                        placeholder="Add tag identifier..." 
+                        placeholder="Project Label..." 
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-[1.2rem] pl-11 pr-4 py-3.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-600/5 transition-all"
@@ -314,18 +358,21 @@ const AppBuilder: React.FC<AppBuilderProps> = ({ onAssetSecured, notify }) => {
                 </div>
                 
                 <div className="flex items-center gap-4 shrink-0">
-                  <button 
-                    onClick={() => { navigator.clipboard.writeText(output!); notify("Manifest DNA Securely Copied."); }}
-                    className="px-6 py-4 bg-white text-slate-500 border border-slate-200 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95"
-                  >
-                    Copy DNA
-                  </button>
-                  <button 
-                    onClick={handleDeploy}
-                    className="px-10 py-5 bg-emerald-600 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.3em] shadow-2xl shadow-emerald-600/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center gap-3"
-                  >
-                    <ShieldCheck className="w-5 h-5" /> Finalize Materialization
-                  </button>
+                  {!productionUrl ? (
+                    <button 
+                      onClick={handleDeploy}
+                      className="px-12 py-5 bg-emerald-600 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.3em] shadow-2xl shadow-emerald-600/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center gap-3"
+                    >
+                      <ShieldCheck className="w-5 h-5" /> Deploy Shard
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={openLive}
+                      className="px-12 py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.3em] shadow-2xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-3"
+                    >
+                      <ExternalLink className="w-5 h-5" /> Open Production
+                    </button>
+                  )}
                 </div>
               </div>
             )}

@@ -22,7 +22,9 @@ import {
   FlaskConical,
   Scale,
   Eye,
-  Power
+  Power,
+  ServerOff,
+  MonitorCheck
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -38,6 +40,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onNavigateToDashboard, onLockdo
   const [isRealtimeTraining, setIsRealtimeTraining] = useState(true);
   const [activeLogs, setActiveLogs] = useState<string[]>([]);
   const [stealthMode, setStealthMode] = useState(false);
+  const [isSealing, setIsSealing] = useState(false);
 
   useEffect(() => {
     if (isRealtimeTraining) {
@@ -61,6 +64,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onNavigateToDashboard, onLockdo
 
   const initiateLockdown = () => {
     if (!confirm("TOTAL SYSTEM SEIZURE: This will close all backends and prevent any generative activity. Require Root restorative key to unlock. Proceed?")) return;
+    onLockdown();
+  };
+
+  const handleSealEnvironment = async () => {
+    if (!confirm("FINAL SEAL: This will bake the environment for deployment, closing up all generative paths and putting backends into deep-sleep. Proceed?")) return;
+    setIsSealing(true);
+    notify("Sealing Environment for final deployment...", "success");
+    await new Promise(r => setTimeout(r, 2000));
     onLockdown();
   };
 
@@ -142,24 +153,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onNavigateToDashboard, onLockdo
 
             <div className="mt-10 pt-10 border-t border-slate-200 flex flex-wrap gap-4">
               <button 
-                onClick={simulateWipe}
-                className="px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95"
+                onClick={handleSealEnvironment}
+                className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-xl shadow-emerald-600/20"
               >
-                {isWiping ? <RefreshCw className="w-5 h-5 animate-spin" /> : <AlertOctagon className="w-5 h-5" />}
-                Purge Global Matrix
+                {isSealing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <MonitorCheck className="w-5 h-5" />}
+                Seal Environment
               </button>
               <button 
-                onClick={() => { setStealthMode(!stealthMode); notify(stealthMode ? "Stealth Ops Stand Down." : "Stealth Mode ACTIVE."); }}
-                className="px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 border border-slate-200 transition-all active:scale-95"
+                onClick={simulateWipe}
+                className="px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-xl shadow-red-600/20"
               >
-                {stealthMode ? <Eye className="w-5 h-5 text-blue-600" /> : <EyeOff className="w-5 h-5 text-slate-400" />}
-                Stealth Ops Mode
+                {isWiping ? <RefreshCw className="w-5 h-5 animate-spin" /> : <AlertOctagon className="w-5 h-5" />}
+                Purge Matrix
               </button>
               <button 
                 onClick={initiateLockdown}
                 className="px-8 py-4 bg-slate-900 hover:bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 ml-auto"
               >
-                <Power className="w-5 h-5 text-red-500" />
+                <ServerOff className="w-5 h-5 text-red-500" />
                 Close All Backends
               </button>
             </div>

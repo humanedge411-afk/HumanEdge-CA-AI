@@ -182,35 +182,6 @@ const CreativeStudio: React.FC<CreativeStudioProps> = ({ onAssetSecured, notify 
     notify(newVal ? "Auto-clear override enabled." : "Auto-clear override disabled.");
   };
 
-  const handleVibeRegeneration = async () => {
-    if (!vibeUpdatePrompt) return;
-    setIsUpdatingVibe(true);
-    try {
-      const currentDesc = vibeOverrides[selectedVibe] || "Standard system aesthetic baseline.";
-      const newAesthetic = await updateVibeAesthetic(selectedVibe, currentDesc, vibeUpdatePrompt);
-      if (newAesthetic) {
-        const newOverrides = { ...vibeOverrides, [selectedVibe]: newAesthetic };
-        setVibeOverrides(newOverrides);
-        localStorage.setItem('humanedge_vibe_overrides', JSON.stringify(newOverrides));
-        setVibeUpdatePrompt('');
-        notify(`${selectedVibe.toUpperCase()} design system updated via AI.`);
-      }
-    } catch (err) {
-      console.error(err);
-      notify("Design system update failed.", "error");
-    } finally {
-      setIsUpdatingVibe(false);
-    }
-  };
-
-  const saveManualAsBaseline = () => {
-    if (!manualAestheticOverride) return;
-    const newOverrides = { ...vibeOverrides, [selectedVibe]: manualAestheticOverride };
-    setVibeOverrides(newOverrides);
-    localStorage.setItem('humanedge_vibe_overrides', JSON.stringify(newOverrides));
-    notify(`Manual script locked to ${selectedVibe.toUpperCase()} baseline.`);
-  };
-
   const handleGenerate = async (silent: boolean = false) => {
     if (!prompt || prompt.length < 3) return;
     if (!silent) setIsGenerating(true);
@@ -491,7 +462,7 @@ const CreativeStudio: React.FC<CreativeStudioProps> = ({ onAssetSecured, notify 
               </div>
             </div>
 
-            {/* Refined Vibe Selection */}
+            {/* Enhanced Vibe Selection */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Aesthetic Alignment</label>
@@ -518,12 +489,17 @@ const CreativeStudio: React.FC<CreativeStudioProps> = ({ onAssetSecured, notify 
                   <div key={v.id} className="relative group">
                     <button
                       onClick={() => { setSelectedVibe(v.id); notify(`Vibe Profile: ${v.name}`); }}
-                      className={`w-full p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all duration-300 relative ${
+                      className={`w-full p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all duration-300 relative overflow-hidden ${
                         selectedVibe === v.id 
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-[0_10px_30px_-10px_rgba(37,99,235,0.4)] scale-105 z-10' 
+                          ? 'bg-blue-600 border-blue-400 text-white shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] scale-105 z-10 ring-4 ring-blue-600/10' 
                           : 'bg-white border-slate-100 text-slate-500 hover:border-blue-300 hover:bg-slate-50'
                       }`}
                     >
+                      {/* Animated Pulse Ring for Active Selection */}
+                      {selectedVibe === v.id && (
+                        <div className="absolute inset-0 rounded-2xl border-2 border-white/40 animate-pulse pointer-events-none"></div>
+                      )}
+                      
                       <v.icon className={`w-6 h-6 transition-all duration-300 ${
                         selectedVibe === v.id ? 'text-white scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : v.color
                       } group-hover:scale-110`} />
@@ -531,29 +507,35 @@ const CreativeStudio: React.FC<CreativeStudioProps> = ({ onAssetSecured, notify 
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[10px] font-black uppercase tracking-widest ${selectedVibe === v.id ? 'text-white' : 'text-slate-900'}`}>{v.name}</span>
                         {selectedVibe === v.id && (
-                          <CheckCircle2 className="w-3 h-3 text-white fill-blue-600 animate-in zoom-in-50 duration-300" />
+                          <div className="bg-white rounded-full p-0.5 shadow-md border border-blue-200 animate-in zoom-in-50 duration-300">
+                             <CheckCircle2 className="w-2.5 h-2.5 text-blue-600" />
+                          </div>
                         )}
                       </div>
 
-                      {/* Aesthetic Tooltip */}
-                      <div className="absolute top-0 left-full ml-3 z-[100] w-48 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 translate-x-2 group-hover:translate-x-0 hidden sm:block">
-                        <div className="glass bg-white p-4 rounded-2xl border border-slate-200 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)]">
-                          <div className="flex items-center gap-2 mb-2">
-                             <div className={`p-1.5 rounded-lg bg-slate-50 ${v.color}`}>
-                               <v.icon className="w-3.5 h-3.5" />
+                      {/* Descriptive Glassmorphic Tooltip */}
+                      <div className="absolute top-0 left-full ml-4 z-[100] w-56 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 translate-x-3 group-hover:translate-x-0 hidden lg:block">
+                        <div className="glass bg-white/95 backdrop-blur-xl p-5 rounded-[1.5rem] border border-slate-200 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
+                          <div className="flex items-center gap-3 mb-3">
+                             <div className={`p-2 rounded-xl bg-slate-50 shadow-inner ${v.color}`}>
+                               <v.icon className="w-4 h-4" />
                              </div>
-                             <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">{v.name} Profile</span>
+                             <div>
+                               <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest block leading-none">{v.name} Design</span>
+                               <span className="text-[7px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 block">Aesthetic Profile</span>
+                             </div>
                           </div>
-                          <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{v.desc}</p>
-                          <div className="mt-3 pt-3 border-t border-slate-100">
+                          <p className="text-[10px] text-slate-600 font-semibold leading-relaxed mb-4 border-l-2 border-slate-100 pl-3">{v.desc}</p>
+                          <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                              <div className="flex items-center gap-1.5">
                                <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                               <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Integrity Aligned</span>
+                               <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Integrity Validated</span>
                              </div>
+                             <Layers className="w-3 h-3 text-slate-300" />
                           </div>
                         </div>
-                        {/* Tooltip Arrow */}
-                        <div className="w-3 h-3 bg-white border-l border-b border-slate-200 absolute left-[-6px] top-6 rotate-45"></div>
+                        {/* Tooltip Connector Arrow */}
+                        <div className="w-3 h-3 bg-white border-l border-b border-slate-200 absolute left-[-6px] top-8 rotate-45 shadow-[-4px_4px_8px_-2px_rgba(0,0,0,0.05)]"></div>
                       </div>
                     </button>
                   </div>
