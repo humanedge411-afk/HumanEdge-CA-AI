@@ -20,24 +20,44 @@ const CodeRepair: React.FC<CodeRepairProps> = ({ onAssetSecured, notify }) => {
     const context = isRefining ? tweak : problem;
     if (!context) return;
     setIsFixing(true);
-    try {
-      if (isRefining && solution) {
-        const code = await refineCode(solution, tweak);
-        setSolution(code);
-        setTweak('');
-        setShowTweak(false);
-        notify("Code refinement complete.");
-      } else {
-        const code = await generateCodeSolution(problem);
-        setSolution(code);
-        notify("Foundation materialized successfully.");
+    
+    let attempts = 0;
+    const maxAttempts = 3;
+    let success = false;
+    let lastError = '';
+
+    while (attempts < maxAttempts && !success) {
+      try {
+        attempts++;
+        if (attempts > 1) notify(`Integrity check failed. Auto-regenerating (Attempt ${attempts}/${maxAttempts})...`, 'error');
+        
+        let code = '';
+        if (isRefining && solution) {
+          code = await refineCode(solution, tweak + (lastError ? `\nFIX ERROR: ${lastError}` : ''));
+        } else {
+          code = await generateCodeSolution(problem + (lastError ? `\nFIX ERROR: ${lastError}` : ''));
+        }
+
+        if (code && code.length > 50) { // Basic sanity check
+          setSolution(code);
+          if (isRefining) {
+            setTweak('');
+            setShowTweak(false);
+          }
+          success = true;
+          notify(attempts > 1 ? "Integrity restored. Product materialized." : "Foundation materialized successfully.");
+        } else {
+          throw new Error("Incomplete materialization detected.");
+        }
+      } catch (err: any) {
+        lastError = err.message || 'Unknown neural fault';
+        console.error(`Attempt ${attempts} failed:`, err);
+        if (attempts >= maxAttempts) {
+          notify("Regeneration cycle failed after multiple attempts.", "error");
+        }
       }
-    } catch (err) {
-      console.error(err);
-      notify("Regeneration cycle failed.", "error");
-    } finally {
-      setIsFixing(false);
     }
+    setIsFixing(false);
   };
 
   return (

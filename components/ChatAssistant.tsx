@@ -32,7 +32,7 @@ const ChatAssistant: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'model', 
-      text: "Welcome to HumanEdge Support Core. I am your integrated assistant for product synthesis and platform navigation. How can I facilitate your vision today?", 
+      text: "Welcome to HumanEdge(CA) AI Support Core. I am your integrated assistant for product synthesis and platform navigation, powered by HumanEdge Canada Core. How can I facilitate your vision today?", 
       timestamp: Date.now() 
     }
   ]);

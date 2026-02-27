@@ -1,4 +1,10 @@
 
+export enum SubscriptionTier {
+  FREE = 'free',
+  PRO = 'pro',
+  ELITE = 'elite'
+}
+
 export enum AppView {
   DASHBOARD = 'dashboard',
   CREATIVE_STUDIO = 'creative_studio',
@@ -9,6 +15,8 @@ export enum AppView {
   ADMIN = 'admin',
   USER_PORTAL = 'user_portal',
   APP_BUILDER = 'app_builder',
+  SETTINGS = 'settings',
+  LEGAL = 'legal',
   SYSTEM_LOCKED = 'system_locked'
 }
 

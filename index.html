@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,78 +6,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HumanEdge(CA) AI - Integrity Focused</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fafafa;
+            color: #0f172a;
             margin: 0;
             overflow-x: hidden;
+            letter-spacing: -0.01em;
         }
         .mono {
             font-family: 'JetBrains Mono', monospace;
         }
-        /* Glassmorphism for Light Theme */
+        /* Classy Glassmorphism */
         .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        .gradient-border {
-            border: 1px solid transparent;
-            background: linear-gradient(#ffffff, #ffffff) padding-box,
-                        linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899) border-box;
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Animated Network Background (Light Optimized) */
-        .network-bg {
+        /* Subtle Landscape Background */
+        .landscape-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 0;
-            opacity: 0.05;
-            background-image: 
-                radial-gradient(circle at 2px 2px, rgba(59, 130, 246, 0.5) 1px, transparent 0);
-            background-size: 40px 40px;
-        }
-
-        .network-overlay {
-            position: absolute;
-            inset: 0;
+            z-index: -1;
             background: 
-                linear-gradient(rgba(248, 250, 252, 0.1) 0%, rgba(248, 250, 252, 1) 100%),
-                url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.03;
-            animation: panBackground 120s linear infinite;
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
         }
 
-        @keyframes panBackground {
-            0% { background-position: 0% 50%; transform: scale(1); }
-            50% { background-position: 100% 50%; transform: scale(1.1); }
-            100% { background-position: 0% 50%; transform: scale(1); }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
         }
 
-        /* Subtle floating nodes */
-        .node-float {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(40px);
-            animation: floatNode 20s ease-in-out infinite alternate;
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-classy {
+            animation: fadeInScale 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        @keyframes floatNode {
-            from { transform: translate(-10%, -10%); }
-            to { transform: translate(10%, 10%); }
+        input:focus, textarea:focus {
+            outline: none;
         }
     </style>
 <script type="importmap">
@@ -91,8 +82,11 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>
+    <div class="landscape-bg"></div>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

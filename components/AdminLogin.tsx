@@ -39,8 +39,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onCancel }) => {
           </div>
           
           <div>
-            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Creator Entry</h3>
-            <p className="text-[10px] text-blue-600 font-black uppercase tracking-[0.3em] mt-1">System Authority Verification</p>
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Integrity Admin Login</h3>
+            <p className="text-[10px] text-blue-600 font-black uppercase tracking-[0.3em] mt-1">cn2025-IntegrityADMINLogin/component/Adminlogin.hec#1</p>
           </div>
 
           <form onSubmit={handleLogin} className="w-full space-y-4">
@@ -50,7 +50,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onCancel }) => {
                 type="password"
                 value={passkey}
                 onChange={(e) => setPasskey(e.target.value)}
-                placeholder="Enter Creator Passkey"
+                placeholder="Enter cn2025 Creator Passkey"
                 className={`w-full pl-12 pr-4 py-4 bg-slate-50 border rounded-2xl text-sm font-bold transition-all focus:outline-none focus:ring-2 ${
                   error ? 'border-red-500 focus:ring-red-500/10' : 'border-slate-200 focus:ring-blue-600/10'
                 }`}
@@ -58,7 +58,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onCancel }) => {
             </div>
 
             {error && (
-              <p className="text-[10px] text-red-500 font-black uppercase tracking-widest text-center">Invalid Creator Credentials</p>
+              <p className="text-[10px] text-red-500 font-black uppercase tracking-widest text-center">Invalid Integrity Credentials</p>
             )}
 
             <button
@@ -67,7 +67,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onSuccess, onCancel }) => {
               className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50"
             >
               {isAuthenticating ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-              {isAuthenticating ? 'Authenticating...' : 'Authorize Access'}
+              {isAuthenticating ? 'Verifying Integrity...' : 'Authorize cn2025 Access'}
             </button>
             
             <button

@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Gamepad2, Rocket, Loader2, RefreshCw, Layout, Layers, Box, Terminal, ChevronRight, MousePointer2, Move, Trash2, Cpu, Zap, Boxes, Sparkles, Target, Globe, Info, ShieldCheck, Save, Tag, Plus, X } from 'lucide-react';
-import { generateGameConcept } from '../services/gemini';
-import { AppView } from '../types';
+import { Gamepad2, Rocket, Loader2, RefreshCw, Layout, Layers, Box, Terminal, ChevronRight, MousePointer2, Move, Trash2, Cpu, Zap, Boxes, Sparkles, Target, Globe, Info, ShieldCheck, Save, Tag, Plus, X, ImageIcon } from 'lucide-react';
+import { generateGameConcept, generateImage } from '../services/gemini';
+import { AppView, VibeMode } from '../types';
 
 // Added GameEngineProps to match App.tsx pass-through
 interface GameEngineProps {
@@ -35,7 +35,10 @@ const GameEngine: React.FC<GameEngineProps> = ({ onAssetSecured, notify }) => {
   const [tweak, setTweak] = useState('');
   const [concept, setConcept] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'blueprint' | 'assets'>('blueprint');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'assets' | 'specs'>('blueprint');
   const [sceneAssets, setSceneAssets] = useState<SceneAsset[]>([]);
 
   // Tagging State
@@ -44,16 +47,65 @@ const GameEngine: React.FC<GameEngineProps> = ({ onAssetSecured, notify }) => {
 
   const handleGenerate = async (isRefining: boolean = false) => {
     if (!genre) return;
-    setLoading(true);
+    if (isRefining) setIsRegenerating(true);
+    else setLoading(true);
+    
+    let attempts = 0;
+    const maxAttempts = 3;
+    let success = false;
+    let lastError = '';
+
+    while (attempts < maxAttempts && !success) {
+      try {
+        attempts++;
+        if (attempts > 1) notify(`Reality forge unstable. Auto-repairing (Attempt ${attempts}/${maxAttempts})...`, 'error');
+        
+        const result = await generateGameConcept(
+          genre + (lastError ? ` | Fix previous error: ${lastError}` : ''), 
+          isRefining ? concept : undefined, 
+          isRefining ? tweak : undefined
+        );
+
+        if (result && result.title) {
+          setConcept(result);
+          if (isRefining) {
+            notify(`Architecture regenerated: ${result.title}`);
+            setTweak('');
+          } else {
+            notify(`Game architecture for ${genre} forged.`);
+            setHeroImage(null);
+          }
+          success = true;
+        } else {
+          throw new Error("Incomplete architecture manifest.");
+        }
+      } catch (err: any) {
+        lastError = err.message || 'Unknown neural fault';
+        console.error(`Forge attempt ${attempts} failed:`, err);
+        if (attempts >= maxAttempts) {
+          notify("Reality forge failed after multiple attempts.", "error");
+        }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+    
+    setLoading(false);
+    setIsRegenerating(false);
+  };
+
+  const handleGenerateHeroImage = async () => {
+    if (!concept) return;
+    setIsGeneratingImage(true);
     try {
-      const result = await generateGameConcept(genre, isRefining ? concept : undefined, isRefining ? tweak : undefined);
-      setConcept(result);
-      notify(`Game architecture for ${genre} forged.`);
-    } catch (err) { 
-      console.error(err); 
-      notify("Reality forge failed.", "error");
-    } 
-    finally { setLoading(false); }
+      const img = await generateImage(`Hero image for a ${genre} game titled "${concept.title}". ${concept.tagline}. ${concept.story}`, 'cyberpunk');
+      setHeroImage(img);
+      notify("Aesthetic shard materialized.");
+    } catch (err) {
+      console.error(err);
+      notify("Visual materialization failed.", "error");
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -128,37 +180,90 @@ const GameEngine: React.FC<GameEngineProps> = ({ onAssetSecured, notify }) => {
           </button>
 
           {concept && (
-            <div className="pt-8 border-t border-slate-100 space-y-6">
-              <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Tag className="w-3 h-3" /> Categorize Forge</h5>
+            <div className="pt-8 border-t border-slate-100 space-y-8">
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-1.5 min-h-[24px]">
-                  {gameTags.map(tag => (
-                    <span key={tag} className="flex items-center gap-1 pl-2 pr-1 py-1 bg-purple-50 text-purple-600 text-[9px] font-black rounded-lg border border-purple-100">
-                      {tag.toUpperCase()}
-                      <button onClick={() => setGameTags(gameTags.filter(t => t !== tag))} className="p-0.5 hover:bg-purple-100 rounded-md">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <form onSubmit={addTag} className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Add tag..." 
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/10"
-                  />
-                  <button type="submit" className="p-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </form>
-                <button 
-                  onClick={handleSaveProject}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-600/10 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <RefreshCw className={`w-3 h-3 ${isRegenerating ? 'animate-spin' : ''}`} /> 
+                  Regeneration Hub
+                </h5>
+                <textarea
+                  placeholder="Describe refinements (e.g., 'Make it darker', 'Add multiplayer mechanics')..."
+                  value={tweak}
+                  onChange={(e) => setTweak(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-[10px] font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/10 min-h-[100px] resize-none"
+                />
+                <button
+                  onClick={() => handleGenerate(true)}
+                  disabled={isRegenerating || !tweak}
+                  className="w-full py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-[9px] tracking-[0.2em] hover:bg-slate-800 transition-all disabled:opacity-50"
                 >
-                  <Save className="w-4 h-4" /> Secure Project
+                  {isRegenerating ? 'Regenerating...' : 'Apply Refinement'}
                 </button>
+              </div>
+
+              <div className="space-y-4">
+                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" /> 
+                  Aesthetic Shard
+                </h5>
+                {heroImage ? (
+                  <div className="relative group rounded-2xl overflow-hidden border border-slate-200 aspect-video bg-slate-100">
+                    <img src={heroImage} alt="Hero" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <button 
+                      onClick={handleGenerateHeroImage}
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
+                    >
+                      Regenerate Visual
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGenerateHeroImage}
+                    disabled={isGeneratingImage}
+                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-black uppercase text-[9px] tracking-widest hover:border-purple-300 hover:text-purple-600 transition-all flex flex-col items-center gap-2"
+                  >
+                    {isGeneratingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <>
+                        <ImageIcon className="w-5 h-5" />
+                        Materialize Hero Image
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Tag className="w-3 h-3" /> Categorize Forge</h5>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-1.5 min-h-[24px]">
+                    {gameTags.map(tag => (
+                      <span key={tag} className="flex items-center gap-1 pl-2 pr-1 py-1 bg-purple-50 text-purple-600 text-[9px] font-black rounded-lg border border-purple-100">
+                        {tag.toUpperCase()}
+                        <button onClick={() => setGameTags(gameTags.filter(t => t !== tag))} className="p-0.5 hover:bg-purple-100 rounded-md">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <form onSubmit={addTag} className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Add tag..." 
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600/10"
+                    />
+                    <button type="submit" className="p-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </form>
+                  <button 
+                    onClick={handleSaveProject}
+                    className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-600/10 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-4 h-4" /> Secure Project
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -178,9 +283,12 @@ const GameEngine: React.FC<GameEngineProps> = ({ onAssetSecured, notify }) => {
           ) : (
             <div className="glass p-10 rounded-[2.5rem] border border-slate-200 bg-white space-y-8 min-h-[600px] flex flex-col">
                <div className="flex justify-between items-center border-b border-slate-100 pb-6">
-                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{concept.title}</h3>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{concept.title}</h3>
+                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.3em]">{concept.tagline}</p>
+                  </div>
                   <div className="flex gap-2">
-                    {['blueprint', 'assets'].map((t: any) => (
+                    {['blueprint', 'assets', 'specs'].map((t: any) => (
                       <button key={t} onClick={() => setActiveTab(t)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === t ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
                         {t}
                       </button>
@@ -203,6 +311,31 @@ const GameEngine: React.FC<GameEngineProps> = ({ onAssetSecured, notify }) => {
                        ))}
                     </div>
                  </div>
+               ) : activeTab === 'specs' ? (
+                <div className="flex-1 space-y-8 animate-in fade-in slide-in-from-right-4">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Technical Stack</p>
+                      <div className="flex flex-wrap gap-2">
+                        {concept.technicalStack.map((tech: string, i: number) => (
+                          <span key={i} className="px-3 py-1.5 bg-slate-900 text-white text-[9px] font-black rounded-lg uppercase tracking-widest">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Target Audience</p>
+                      <p className="text-sm font-bold text-slate-700">{concept.targetAudience}</p>
+                    </div>
+                    <div className="space-y-4 col-span-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Monetization Strategy</p>
+                      <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                        <p className="text-sm font-bold text-emerald-800">{concept.monetization}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                ) : (
                  <div className="flex-1 grid grid-cols-4 gap-6 animate-in fade-in zoom-in-95">
                     <div className="col-span-1 space-y-2">
